@@ -1350,6 +1350,119 @@ registerProvider {
 }
 ```
 
+## Enhanced Provider Architecture
+
+### Provider Contract Integration
+
+PSF providers can request additional contracts to provide enhanced functionality. This enables providers to offer complete, production-ready solutions with SSL, authentication, backups, and monitoring.
+
+#### Enhanced LLDAP Provider Configuration
+
+```nix
+# Configuration example for enhanced LLDAP provider
+psf.providers.lldap = {
+  # Core LDAP configuration
+  base_dn = "dc=pixelkeepers,dc=net";
+  admin_password_secret = "/run/secrets/lldap-admin-password";
+  jwt_secret_path = "/run/secrets/lldap-jwt-secret";
+  
+  # Web interface configuration
+  web_interface = true;
+  web_port = 17170;
+  
+  # SSL and domain configuration
+  ssl_enabled = true;
+  domain = "pixelkeepers.net";
+  subdomain = "ldap";
+  
+  # Authentication configuration
+  auth_required = true;
+  allowed_groups = [ "lldap_admin" ];
+  
+  # Additional features
+  backup_enabled = true;
+  backup_retention_days = 30;
+  monitoring_enabled = true;
+};
+```
+
+#### Enhanced Authelia Provider Configuration
+
+```nix
+# Configuration example for enhanced Authelia provider
+psf.providers.authelia = {
+  # Core configuration
+  domain = "auth.pixelkeepers.net";
+  port = 9091;
+  
+  # LDAP integration
+  ldap_url = "ldap://127.0.0.1:3890";
+  ldap_base_dn = "dc=pixelkeepers,dc=net";
+  ldap_user_base_dn = "ou=people,dc=pixelkeepers,dc=net";
+  ldap_group_base_dn = "ou=groups,dc=pixelkeepers,dc=net";
+  ldap_bind_dn = "cn=admin,dc=pixelkeepers,dc=net";
+  ldap_bind_password_secret = "/run/secrets/lldap-admin-password";
+  
+  # Database configuration (auto-selects based on provider priority)
+  database_preference = "auto"; # Uses PostgreSQL if available, falls back to SQLite
+  
+  # Secrets
+  jwt_secret_path = "/run/secrets/authelia-jwt-secret";
+  session_secret_path = "/run/secrets/authelia-session-secret";
+  storage_encryption_key_path = "/run/secrets/authelia-storage-key";
+  issuer_private_key_path = "/run/secrets/authelia-issuer-key";
+};
+```
+
+#### Provider Contract Requests
+
+Providers can request additional contracts in their `fulfill` function:
+
+```nix
+# Example from enhanced LLDAP provider
+fulfill = request: providerConfig:
+  let
+    additional_contracts = 
+      # SSL contract (if enabled)
+      lib.optionalAttrs (providerConfig.ssl_enabled && full_domain != null) {
+        ssl = contracts.ssl.mkRequest {
+          domain = full_domain;
+          auto_renew = true;
+        };
+      } //
+      # Backup contract (if enabled)
+      lib.optionalAttrs providerConfig.backup_enabled {
+        backup = contracts.backup.mkRequest {
+          paths = [ "/var/lib/lldap" ];
+          schedule = "daily";
+          retention = { daily = providerConfig.backup_retention_days; };
+        };
+      } //
+      # SSO contract (if auth required)
+      lib.optionalAttrs (providerConfig.auth_required && full_domain != null) {
+        sso = contracts.sso.mkRequest {
+          client_id = "lldap-admin";
+          redirect_uris = [ "https://${full_domain}/auth/callback" ];
+          access_policy = "two_factor";
+          allowed_groups = providerConfig.allowed_groups;
+        };
+      };
+  in {
+    needs = additional_contracts;
+    config = { /* provider configuration */ };
+    result = { /* contract result */ };
+  };
+```
+
+### Benefits of Enhanced Provider Architecture
+
+1. **Complete Solutions**: Providers offer production-ready functionality out of the box
+2. **No Service Duplication**: No need for separate service files that duplicate provider logic
+3. **Consistent Configuration**: All related functionality configured in one place
+4. **Contract Composition**: Providers can use other contracts to build complex solutions
+5. **Optional Features**: Users can enable/disable advanced features as needed
+6. **Flexibility**: Providers can adapt their behavior based on configuration
+
 ## Enhanced Service Implementation - services/plex.nix
 
 ```nix
@@ -2147,30 +2260,35 @@ in {
 - [x] Implement `lib/service-builder.nix` service composition
 - [x] Create basic flake.nix that exports PSF module
 
-### Phase 2: Essential Contracts 🔄 IN PROGRESS
-- [ ] Implement `contracts/ssl.nix` SSL certificate contract
-- [ ] Implement `contracts/backup.nix` backup contract  
-- [ ] Implement `contracts/secrets.nix` secret management contract
+### Phase 2: Essential Contracts ✅ COMPLETED
+- [x] Implement `contracts/ssl.nix` SSL certificate contract
+- [x] Implement `contracts/backup.nix` backup contract  
+- [x] Implement `contracts/secrets.nix` secret management contract
 - [x] Implement `contracts/database.nix` database contract (PostgreSQL 17 default)
-- [ ] Implement `contracts/ldap.nix` LDAP directory service contract
-- [ ] Implement `contracts/sso.nix` Single Sign-On authentication contract
-- [ ] Implement `contracts/proxy.nix` reverse proxy contract
+- [x] Implement `contracts/ldap.nix` LDAP directory service contract
+- [x] Implement `contracts/sso.nix` Single Sign-On authentication contract
+- [x] Implement `contracts/proxy.nix` reverse proxy contract
 
-### Phase 3: Core Providers 🔄 IN PROGRESS
-- [ ] Implement `providers/ssl/letsencrypt.nix` Let's Encrypt provider
-- [ ] Implement `providers/ssl/selfsigned.nix` self-signed provider
-- [ ] Implement `providers/backup/restic.nix` Restic provider
-- [ ] Implement `providers/secrets/sops.nix` SOPS provider
+### Phase 3: Core Providers ✅ COMPLETED
+- [x] Implement `providers/ssl/letsencrypt.nix` Let's Encrypt provider
+- [x] Implement `providers/ssl/selfsigned.nix` self-signed provider
+- [x] Implement `providers/backup/restic.nix` Restic provider
+- [x] Implement `providers/backup/borg.nix` Borg provider
+- [x] Implement `providers/secrets/sops.nix` SOPS provider
+- [x] Implement `providers/secrets/hardcoded.nix` hardcoded provider
 - [x] Implement `providers/database/postgresql.nix` PostgreSQL provider (version 17 default)
 - [x] Implement `providers/database/mysql.nix` MySQL provider
-- [ ] Implement `providers/ldap/lldap.nix` LLDAP provider
-- [ ] Implement `providers/sso/authelia.nix` Authelia SSO provider
-- [ ] Implement `providers/proxy/nginx.nix` Nginx provider
+- [x] Implement `providers/ldap/lldap.nix` Enhanced LLDAP provider with web interface, SSL, auth
+- [x] Implement `providers/sso/authelia.nix` Authelia SSO provider with flexible database support
+- [x] Implement `providers/proxy/nginx.nix` Nginx provider with SSL and auth_request support
 
-### Phase 4: Core Services 🔄 IN PROGRESS
-- [ ] Implement `services/lldap.nix` LLDAP directory service
+### Phase 4: Enhanced Provider Architecture ✅ COMPLETED
+- [x] ~~Implement `services/lldap.nix` LLDAP directory service~~ **ARCHITECTURE CHANGE**: Enhanced providers handle full functionality
+- [x] Enhanced `providers/ldap/lldap.nix` with optional web interface, SSL, SSO authentication
+- [x] Enhanced `providers/sso/authelia.nix` with flexible database support (PostgreSQL/MySQL/SQLite)
+- [x] Enhanced `providers/proxy/nginx.nix` with comprehensive SSL and authentication support
 - [ ] Implement `services/plex.nix` Plex service using PSF pattern
-- [ ] Create test configuration that uses LDAP + Plex services
+- [ ] Create test configuration that uses enhanced providers
 - [ ] Validate that configuration builds without errors
 - [ ] Test deployment to server
 - [ ] Verify all contracts are fulfilled correctly

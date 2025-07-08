@@ -66,19 +66,19 @@ in {
   database = import ../providers/database { inherit lib pkgs registerProvider mkResult; };
   
   ldap = {
-    # lldap = import ../providers/ldap/lldap.nix { inherit lib pkgs registerProvider; };
+    lldap = import ../providers/ldap/lldap.nix { inherit lib pkgs registerProvider; };
     # kanidm = import ../providers/ldap/kanidm.nix { inherit lib pkgs registerProvider; };
     # openldap = import ../providers/ldap/openldap.nix { inherit lib pkgs registerProvider; };
   };
   
   sso = {
-    # authelia = import ../providers/sso/authelia.nix { inherit lib pkgs registerProvider; };
+    authelia = import ../providers/sso/authelia.nix { inherit lib pkgs registerProvider; };
     # kanidm = import ../providers/sso/kanidm.nix { inherit lib pkgs registerProvider; };
     # oidc = import ../providers/sso/oidc.nix { inherit lib pkgs registerProvider; };
   };
   
   proxy = {
-    # nginx = import ../providers/proxy/nginx.nix { inherit lib pkgs registerProvider; };
+    nginx = import ../providers/proxy/nginx.nix { inherit lib pkgs registerProvider; };
     # caddy = import ../providers/proxy/caddy.nix { inherit lib pkgs registerProvider; };
     # traefik = import ../providers/proxy/traefik.nix { inherit lib pkgs registerProvider; };
     # apache = import ../providers/proxy/apache.nix { inherit lib pkgs registerProvider; };

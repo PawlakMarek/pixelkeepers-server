@@ -15,8 +15,8 @@ This document provides essential information about the NixOS server setup for fu
 ### Port Forwarding
 - 80 → 192.168.68.20:80 (HTTP)
 - 443 → 192.168.68.20:443 (HTTPS) 
-- 3322 → 192.168.68.20:22 (SSH)
-- 4422 → 192.168.68.20:2222 (SSH alt)
+- 3322 → 192.168.68.20:22 (SSH - regular access)
+- 4422 → 192.168.68.20:2222 (SSH - boot/initrd unlock)
 
 ### DNS Configuration
 - Managed via Cloudflare
@@ -28,11 +28,27 @@ This document provides essential information about the NixOS server setup for fu
 ### SSH Access
 **Important**: All SSH access is managed via skarabox - direct SSH with username/password won't work.
 
+#### Regular SSH Access (after boot)
 ```bash
-# Access server (only method that works)
+# Local network access (192.168.68.20:22)
 nix run .#nixos-core-ssh
 
-# Unlock root pool after reboot (required after each restart)
+# Remote access via pixelkeepers.net:3322
+nix run .#nixos-core-ssh-remote
+```
+
+#### Boot/InitRD SSH Access (for unlocking during boot)
+```bash
+# Local boot SSH (192.168.68.20:2222)
+nix run .#nixos-core-ssh-boot
+
+# Remote boot SSH (pixelkeepers.net:4422)
+nix run .#nixos-core-ssh-boot-remote
+```
+
+#### Automated Root Pool Unlock
+```bash
+# Unlock root pool during boot (tries local 2222, then remote 4422)
 nix run .#nixos-core-unlock
 ```
 

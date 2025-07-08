@@ -15,8 +15,8 @@ We are replacing SHB (Self-Hosted Blocks) with a custom-built framework called P
   - Memory-independent and complete enough for implementation from scratch
 
 ### Live Documentation (Updated During Implementation)
-- **CLAUDE.md** - This file, provides workflow instructions
-- **PSF_IMPLEMENTATION.md** - Technical specification (update as design evolves)
+- **CLAUDE.md** - This file (at project root), provides workflow instructions
+- **docs/PSF_IMPLEMENTATION.md** - Technical specification (update as design evolves)
 
 ## Working Principles
 
@@ -42,22 +42,25 @@ We are replacing SHB (Self-Hosted Blocks) with a custom-built framework called P
 ### Implementation Status ✅ UPDATED
 PSF framework implementation progress:
 - ✅ **Phase 1: Core Framework** - Complete PSF library with contract resolution and validation
-- 🔄 **Phase 2: Essential Contracts** - Database contract implemented; SSL, backup, secrets, LDAP, SSO, proxy contracts need implementation
-- 🔄 **Phase 3: Core Providers** - Database providers (PostgreSQL 17, MySQL) implemented; other providers need implementation
-- 🔄 **Phase 4: Core Services** - Basic test service created; production services need implementation
+- ✅ **Phase 2: Essential Contracts** - All 7 contracts implemented (SSL, backup, secrets, database, LDAP, SSO, proxy)
+- ✅ **Phase 3: Core Providers** - All critical providers implemented with enhanced functionality
+- ✅ **Phase 4: Enhanced Provider Architecture** - Providers can request additional contracts for complete solutions
+- 🔄 **Phase 5: Production Services** - Creating production-ready services using PSF patterns
 
 ### Recent Achievements
-- **Database Contract**: Complete with PostgreSQL 17 as default, extension support, validation
-- **Development Environment**: Unified at project root with httpie, jq, yq for debugging
-- **Flake Validation**: Working end-to-end including secrets structure validation via template system
-- **Git Integration**: Proper branch structure and commit signing working
+- **Complete Contract System**: All 7 contracts implemented (SSL, backup, secrets, database, LDAP, SSO, proxy)
+- **Enhanced Provider Architecture**: Providers can request additional contracts for complete solutions
+- **Production-Ready LLDAP**: Enhanced provider with web interface, SSL, authentication, backup, monitoring
+- **Flexible Authelia SSO**: Auto-selects database (PostgreSQL/MySQL/SQLite) based on user preference
+- **Comprehensive Nginx Proxy**: SSL termination, authentication, WebSocket support, security headers
+- **Framework Validation**: Complete PSF framework passes `nix flake check`
 
 ### File Structure
 ```
 /home/h4wkeye/Projects/nixos-server/
+├── CLAUDE.md                  # This workflow guide (project root)
 ├── docs/
 │   ├── PSF_IMPLEMENTATION.md   # Main technical specification
-│   ├── CLAUDE.md              # This workflow guide
 │   └── CLAUDE.old.md          # Historic version
 ├── psf/                       # PSF framework implementation (when created)
 │   ├── flake.nix              # PSF framework flake

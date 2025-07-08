@@ -181,6 +181,7 @@
         mdbook
         
         # Development and debugging tools
+	claude-code
         httpie  # Modern curl alternative
         curl    # Classic HTTP client
         jq      # JSON processor
