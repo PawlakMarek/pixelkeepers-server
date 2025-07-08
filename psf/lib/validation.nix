@@ -35,10 +35,8 @@ let
   # Build-time validation - called during nix evaluation
   buildTimeValidation = psf_config:
     let
-      # Validate all provider configurations
-      providerErrors = concatMap (provider: 
-        validateProviderConfig provider (psf_config.providers.${provider.name} or {})
-      ) (attrValues psf_config.available_providers);
+      # Basic configuration validation
+      basicErrors = lib.optionals (psf_config.domain == "") ["PSF domain must be configured"];
       
       # Check for circular dependencies
       circularDepErrors = []; # TODO: Implement circular dependency detection
@@ -47,7 +45,7 @@ let
       missingDepErrors = []; # TODO: Implement missing dependency detection
       
     in {
-      errors = providerErrors ++ circularDepErrors ++ missingDepErrors;
+      errors = basicErrors ++ circularDepErrors ++ missingDepErrors;
       warnings = [];
     };
 

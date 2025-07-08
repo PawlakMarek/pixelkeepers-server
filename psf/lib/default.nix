@@ -183,8 +183,8 @@ in {
           message = "PSF domain must be configured";
         }
         {
-          assertion = validation.buildTimeValidation cfg;
-          message = "PSF build-time validation failed";
+          assertion = (validation.buildTimeValidation cfg).errors == [];
+          message = "PSF build-time validation failed: ${lib.concatStringsSep ", " (validation.buildTimeValidation cfg).errors}";
         }
       ];
       

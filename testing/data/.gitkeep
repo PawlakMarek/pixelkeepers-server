@@ -1,0 +1,2 @@
+# Test data directory for VM testing
+# This directory is mounted in the VM at /mnt/test-data

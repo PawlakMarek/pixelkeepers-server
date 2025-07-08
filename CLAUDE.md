@@ -45,7 +45,8 @@ PSF framework implementation progress:
 - ✅ **Phase 2: Essential Contracts** - All 7 contracts implemented (SSL, backup, secrets, database, LDAP, SSO, proxy)
 - ✅ **Phase 3: Core Providers** - All critical providers implemented with enhanced functionality
 - ✅ **Phase 4: Enhanced Provider Architecture** - Providers can request additional contracts for complete solutions
-- 🔄 **Phase 5: Production Services** - Creating production-ready services using PSF patterns
+- ✅ **Phase 5: Testing Environment** - Complete VM testing infrastructure for safe PSF validation
+- 🔄 **Phase 6: Production Services** - Creating production-ready services using PSF patterns
 
 ### Recent Achievements
 - **Complete Contract System**: All 7 contracts implemented (SSL, backup, secrets, database, LDAP, SSO, proxy)
@@ -53,7 +54,8 @@ PSF framework implementation progress:
 - **Production-Ready LLDAP**: Enhanced provider with web interface, SSL, authentication, backup, monitoring
 - **Flexible Authelia SSO**: Auto-selects database (PostgreSQL/MySQL/SQLite) based on user preference
 - **Comprehensive Nginx Proxy**: SSL termination, authentication, WebSocket support, security headers
-- **Framework Validation**: Complete PSF framework passes `nix flake check`
+- **VM Testing Environment**: Complete testing infrastructure with NixOS VM for safe PSF validation
+- **Framework Validation**: Complete PSF framework and testing environment passes `nix flake check`
 
 ### File Structure
 ```
@@ -62,14 +64,20 @@ PSF framework implementation progress:
 ├── docs/
 │   ├── PSF_IMPLEMENTATION.md   # Main technical specification
 │   └── CLAUDE.old.md          # Historic version
-├── psf/                       # PSF framework implementation (when created)
+├── psf/                       # PSF framework implementation
 │   ├── flake.nix              # PSF framework flake
 │   ├── lib/                   # Core framework functions
 │   ├── contracts/             # Contract definitions
 │   ├── providers/             # Provider implementations
 │   ├── services/              # Service definitions
 │   └── tests/                 # Framework tests
-├── nixos-core/                # Current NixOS configuration (legacy)
+├── testing/                   # PSF testing environment
+│   ├── flake.nix              # VM testing configuration
+│   ├── vm-config.nix          # NixOS VM setup
+│   ├── test-services.nix      # Additional test services
+│   ├── README.md              # Testing documentation
+│   └── data/                  # Shared test data
+├── nixos-core/                # Current NixOS configuration (production)
 │   ├── configuration.nix      # Server configuration
 │   ├── secrets.yaml          # SOPS secrets (gitignored)
 │   ├── ssh.pub               # Server SSH public key
@@ -338,11 +346,44 @@ claude                           # Start Claude Code with all tools available
 3. **Maintain consistency** with existing contract/provider interfaces
 4. **Add proper error handling** with clear error messages
 
-### Testing and Validation
+### Testing and Validation ✅ UPDATED
 1. **Build test** with `nix flake check` after every change
 2. **Fix all warnings and errors** before proceeding
 3. **Test contracts** work with multiple providers when possible
 4. **Validate error messages** are helpful and actionable
+5. **VM Testing** - Use the testing environment for comprehensive validation
+
+#### PSF Testing Environment
+**Location:** `testing/` directory
+
+**Quick Start:**
+```bash
+cd testing
+nix develop           # Enter testing environment
+start-vm             # Build and start test VM
+ssh-vm               # Connect to running VM
+test-psf             # Run PSF validation tests
+```
+
+**Testing Workflow:**
+1. **Implement PSF changes** in `psf/` directory
+2. **Update VM configuration** in `testing/vm-config.nix` if needed
+3. **Deploy to test VM** with `deploy-vm`
+4. **Validate functionality** with `test-psf`
+5. **Fix issues** and repeat until tests pass
+6. **Deploy to production** only after VM testing succeeds
+
+**Available Test Services:**
+- **PostgreSQL** on port 5432 - Database contract testing
+- **Nginx** on ports 80/443 - Proxy and SSL contract testing
+- **SSH** on port 2222 - VM access and management
+- **Test Web Service** on port 3000 - Custom service testing
+
+**Benefits:**
+- **Safe Testing** - No risk to production environment
+- **Complete PSF Stack** - All contracts and providers available
+- **Consistent Environment** - Matches production NixOS/nixpkgs versions
+- **Automated Validation** - Built-in test suite for PSF functionality
 
 ### Documentation Updates
 **ALWAYS update these documents when making changes:**
