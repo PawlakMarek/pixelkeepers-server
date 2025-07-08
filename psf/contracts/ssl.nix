@@ -64,7 +64,9 @@
     
   # Validate SSL result
   validateResult = result:
-    assert builtins.pathExists result.payload.cert_path;
-    assert builtins.pathExists result.payload.key_path;
+    assert result.payload.cert_path != null && lib.isString result.payload.cert_path;
+    assert result.payload.key_path != null && lib.isString result.payload.key_path;
+    assert result.payload.ca_path == null || lib.isString result.payload.ca_path;
+    assert lib.all (s: lib.isString s) result.payload.reload_services;
     true;
 }
