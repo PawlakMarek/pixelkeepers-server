@@ -54,16 +54,36 @@ See [docs/CLAUDE.md](docs/CLAUDE.md) for detailed development workflows and git 
 
 ```bash
 cd psf
-nix develop
-nix flake check
+nix develop                       # Enter PSF development environment with Claude Code
+nix flake check                   # Validate framework components
+claude                           # Start Claude Code for AI-assisted development
 ```
+
+**PSF Development Environment includes:**
+- Claude Code for AI-assisted development
+- Nix development tools (nixpkgs-fmt, statix, nixfmt)
+- Git tools with SSH signing configured
+- Server management tools (deploy-rs, sops)  
+- Documentation tools (mdbook)
+- Environment variables for PSF development
 
 ### Working on Production Server
 
 ```bash
 cd nixos-core
 nix flake check
-nix run .#deploy-rs  # Deploy to server
+
+# Deploy to server (from project root)
+nix run .#deploy                  # Smart deploy (tries local, then remote)
+nix run .#deploy-rs              # Local deployment only
+nix run .#deploy-rs-remote       # Remote deployment only
+
+# SSH access options (from project root)
+nix run .#nixos-core-ssh          # Local network (192.168.68.20:22)
+nix run .#nixos-core-ssh-remote   # Remote access (pixelkeepers.net:3322)
+nix run .#nixos-core-ssh-boot     # Boot SSH local (192.168.68.20:2222)
+nix run .#nixos-core-ssh-boot-remote # Boot SSH remote (pixelkeepers.net:4422)
+nix run .#nixos-core-unlock       # Unlock root pool during boot
 ```
 
 ## Security

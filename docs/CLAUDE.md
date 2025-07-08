@@ -287,12 +287,39 @@ cd nixos-core && nix flake check
 
 ## Development Workflow
 
+### PSF Development Environment
+
+**When working on PSF, enter the development environment first:**
+```bash
+cd psf
+nix develop                       # Enter PSF-specific devshell
+claude                           # Start Claude Code with PSF tools available
+```
+
+**Claude Code will have access to:**
+- **Nix tools** - nixpkgs-fmt, statix, nixfmt for code quality
+- **Git tools** - gh, openssh with SSH signing pre-configured
+- **Server tools** - deploy-rs, sops for server management
+- **Documentation** - mdbook for generating docs
+- **Environment variables**:
+  - `PSF_DEV=true` - Indicates PSF development mode
+  - `PSF_ROOT` - Path to PSF framework directory
+  - `DOCS_PATH` - Path to documentation directory
+
+**Benefits:**
+- All required tools pre-installed and configured
+- Isolated environment prevents conflicts
+- Consistent development environment
+- SSH signing already configured
+
 ### Starting New Work
-1. **Choose appropriate git branch** based on PSF vs nixos-core work
-2. **Read docs/PSF_IMPLEMENTATION.md** completely to understand the current design
-3. **Check existing code** in psf/ directory to understand implementation status
-4. **Identify the specific task** from the implementation checklist
-5. **Understand dependencies** - what needs to be implemented first
+1. **Enter PSF development environment** (`cd psf && nix develop`)
+2. **Start Claude Code** (`claude`)
+3. **Choose appropriate git branch** based on PSF vs nixos-core work
+4. **Read docs/PSF_IMPLEMENTATION.md** completely to understand the current design
+5. **Check existing code** in psf/ directory to understand implementation status
+6. **Identify the specific task** from the implementation checklist
+7. **Understand dependencies** - what needs to be implemented first
 
 ### Making Changes
 1. **Follow exact patterns** defined in PSF_IMPLEMENTATION.md
