@@ -59,17 +59,26 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 
 **Result:** Both backup providers are now fully functional and production-ready
 
-### 3. Hardcoded Secrets Provider (Security Risk)
-**Priority:** CRITICAL  
-**Impact:** Serious security vulnerability if used in production
+### 3. Hardcoded Secrets Provider (Security Risk) ✅ RESOLVED
+**Priority:** ~~CRITICAL~~ RESOLVED  
+**Impact:** ~~Serious security vulnerability if used in production~~ FIXED
 
-**Hardcoded Secrets Provider (`psf/providers/secrets/hardcoded.nix`):**
-- Line 14: Contains warning "NOT SUITABLE FOR PRODUCTION USE"
-- Line 40: Uses hardcoded default "CHANGEME" for missing secrets
-- Line 49-51: Shows security warning about hardcoded secrets
-- Line 72: Metadata includes warning "HARDCODED SECRET - NOT SECURE"
+**Resolution:** Implemented strong production safeguards in hardcoded secrets provider
+- Added build-time production environment detection (PSF_ENVIRONMENT, NIXOS_ENVIRONMENT, NODE_ENV)
+- Added production domain detection (checks for .com, .net, .org, .io domains)
+- Provider throws fatal error when used in production environments
+- Added override mechanism (PSF_ALLOW_HARDCODED_SECRETS=true) for explicit development/testing use
+- Enhanced validation warnings for all usage scenarios
+- Updated provider capabilities to clearly mark as "production_safe = false"
 
-**Solution:** Remove hardcoded provider from production builds or add strong safeguards preventing production use
+**Key Features Added:**
+- **Production Detection**: Automatically detects production environments through environment variables and domain patterns
+- **Fatal Error Prevention**: Throws descriptive error when production use is attempted
+- **Development Override**: Allows explicit override for development/testing with clear warnings
+- **Enhanced Warnings**: Multiple validation warnings for different usage scenarios
+- **Clear Documentation**: Updated description and capabilities to emphasize security risks
+
+**Result:** Hardcoded secrets provider can no longer be accidentally used in production
 
 ### 4. SSL Contract Runtime Validation Issue
 **Priority:** CRITICAL  
@@ -239,14 +248,14 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 ### Critical Gaps ❌
 - ~~**Missing Provider Files**: 7 referenced but missing provider implementations~~ ✅ RESOLVED
 - ~~**Backup Providers**: Both Borg and Restic completely non-functional~~ ✅ RESOLVED
-- **Security Issues**: Hardcoded secrets provider poses security risk
+- ~~**Security Issues**: Hardcoded secrets provider poses security risk~~ ✅ RESOLVED
 - **Build Issues**: SSL contract validation will cause build failures
 
 ### Production Readiness Assessment
 
 **Current Status**: NOT PRODUCTION READY  
-**Blockers**: 2 critical issues must be resolved (2 resolved)  
-**Estimated Work**: 1 week to resolve remaining critical and high priority issues
+**Blockers**: 1 critical issue must be resolved (3 resolved)  
+**Estimated Work**: 2-3 days to resolve remaining critical and high priority issues
 
 **Recommended Approach:**
 1. **Phase 1**: Fix critical issues (~~missing files~~, ~~backup providers~~, security, SSL validation)
@@ -265,7 +274,7 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 1. **Immediate Actions** (Critical):
    - ~~Create missing provider files or remove references~~ ✅ RESOLVED
    - ~~Implement functional backup providers~~ ✅ RESOLVED
-   - Remove or secure hardcoded secrets provider
+   - ~~Remove or secure hardcoded secrets provider~~ ✅ RESOLVED
    - Fix SSL contract validation logic
 
 2. **Short-term Actions** (High Priority):
