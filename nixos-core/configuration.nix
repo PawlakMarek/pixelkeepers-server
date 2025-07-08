@@ -22,7 +22,10 @@ in {
   config = lib.mkMerge [
     {
       shb.zfs.defaultPoolName = "root";
-      sops.defaultSopsFile = ./secrets.yaml;
+      # Use template for flake checks, real secrets for deployment
+      sops.defaultSopsFile = if builtins.pathExists ./secrets.yaml 
+        then ./secrets.yaml 
+        else ./secrets.template.yaml;
 
       # Enable systemd debug logging for service unit validation
       systemd.extraConfig = ''

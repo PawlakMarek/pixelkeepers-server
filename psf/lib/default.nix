@@ -9,6 +9,33 @@ let
   validation = import ./validation.nix { inherit lib pkgs; };
   serviceBuilder = import ./service-builder.nix { inherit lib pkgs; };
   
+  # Contract resolution engine (defined first since it's used by defineService)
+  resolveContracts = contractNeeds: providerConfigs:
+    mapAttrs (contractName: request:
+      let
+        # Find providers for this contract type
+        availableProviders = filterAttrs (name: provider: 
+          provider.contract_type == request.contract_type
+        ) providerConfigs;
+        
+        # Find first provider that can fulfill the request
+        selectedProvider = lib.findFirst 
+          (provider: provider.canFulfill request)
+          (throw "No provider found for contract ${contractName}")
+          (lib.attrValues availableProviders);
+        
+        # Generate result from selected provider
+        fulfillment = selectedProvider.fulfill request;
+        
+      in {
+        request = request;
+        result = fulfillment.result;
+        provider = selectedProvider;
+        config = fulfillment.config;
+        validation_errors = selectedProvider.validate request selectedProvider.config;
+      }
+    ) contractNeeds;
+
 in {
   
   # Main PSF API - this is what services use
@@ -66,32 +93,8 @@ in {
     config = serviceConfig;
   };
   
-  # Contract resolution engine
-  resolveContracts = contractNeeds: providerConfigs:
-    mapAttrs (contractName: request:
-      let
-        # Find providers for this contract type
-        availableProviders = filterAttrs (name: provider: 
-          provider.contract_type == request.contract_type
-        ) providerConfigs;
-        
-        # Find first provider that can fulfill the request
-        selectedProvider = lib.findFirst 
-          (provider: provider.canFulfill request)
-          (throw "No provider found for contract ${contractName}")
-          (lib.attrValues availableProviders);
-        
-        # Generate result from selected provider
-        fulfillment = selectedProvider.fulfill request;
-        
-      in {
-        request = request;
-        result = fulfillment.result;
-        provider = selectedProvider;
-        config = fulfillment.config;
-        validation_errors = selectedProvider.validate request selectedProvider.config;
-      }
-    ) contractNeeds;
+  # Re-export the resolveContracts function
+  inherit resolveContracts;
   
   # Re-export components
   inherit contracts providers validation;

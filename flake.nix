@@ -92,7 +92,6 @@
           ];
           hardware.enableAllHardware = false;
           # SOPS configuration
-          sops.defaultSopsFile = ./nixos-core/secrets.yaml;
           sops.age = {
             sshKeyPaths = ["/boot/host_key"];
           };
