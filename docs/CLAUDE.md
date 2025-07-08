@@ -39,12 +39,18 @@ We are replacing SHB (Self-Hosted Blocks) with a custom-built framework called P
 
 ## Current Project State
 
-### Implementation Status
-Check the implementation checklist in PSF_IMPLEMENTATION.md to understand current progress:
-- Phase 1: Core Framework (check if lib/ components exist)
-- Phase 2: Essential Contracts (check if contracts/ exist)
-- Phase 3: Core Providers (check if providers/ exist)
-- Phase 4: Core Services (check if services/ exist)
+### Implementation Status ✅ UPDATED
+PSF framework implementation progress:
+- ✅ **Phase 1: Core Framework** - Complete PSF library with contract resolution and validation
+- 🔄 **Phase 2: Essential Contracts** - Database contract implemented; SSL, backup, secrets, LDAP, SSO, proxy contracts need implementation
+- 🔄 **Phase 3: Core Providers** - Database providers (PostgreSQL 17, MySQL) implemented; other providers need implementation
+- 🔄 **Phase 4: Core Services** - Basic test service created; production services need implementation
+
+### Recent Achievements
+- **Database Contract**: Complete with PostgreSQL 17 as default, extension support, validation
+- **Development Environment**: Unified at project root with httpie, jq, yq for debugging
+- **Flake Validation**: Working end-to-end including secrets structure validation via template system
+- **Git Integration**: Proper branch structure and commit signing working
 
 ### File Structure
 ```
@@ -287,33 +293,35 @@ cd nixos-core && nix flake check
 
 ## Development Workflow
 
-### PSF Development Environment
+### Development Environment ✅ UPDATED
 
-**When working on PSF, enter the development environment first:**
+**Use the unified development environment from project root:**
 ```bash
-cd psf
-nix develop                       # Enter PSF-specific devshell
-claude                           # Start Claude Code with PSF tools available
+# From project root directory
+nix develop                       # Enter unified development environment
+claude                           # Start Claude Code with all tools available
 ```
 
-**Claude Code will have access to:**
-- **Nix tools** - nixpkgs-fmt, statix, nixfmt for code quality
+**Available tools and capabilities:**
+- **Nix tools** - nixpkgs-fmt, statix, nixfmt-classic for code quality
 - **Git tools** - gh, openssh with SSH signing pre-configured
 - **Server tools** - deploy-rs, sops for server management
 - **Documentation** - mdbook for generating docs
+- **Development debugging** - httpie, curl, jq, yq, netcat for troubleshooting
 - **Environment variables**:
-  - `PSF_DEV=true` - Indicates PSF development mode
-  - `PSF_ROOT` - Path to PSF framework directory
-  - `DOCS_PATH` - Path to documentation directory
+  - `PSF_ROOT` - Path to PSF framework directory (`./psf`)
+  - `NIXOS_CORE_ROOT` - Path to server configuration (`./nixos-core`)
+  - `DOCS_PATH` - Path to documentation directory (`./docs`)
+  - `PROJECT_ROOT` - Path to project root (`.`)
 
 **Benefits:**
-- All required tools pre-installed and configured
-- Isolated environment prevents conflicts
-- Consistent development environment
-- SSH signing already configured
+- Single development environment for both PSF and nixos-core work
+- All project components accessible
+- Consistent tooling across the entire project
+- SSH signing and deployment tools pre-configured
 
-### Starting New Work
-1. **Enter PSF development environment** (`cd psf && nix develop`)
+### Starting New Work ✅ UPDATED
+1. **Enter unified development environment** (`nix develop` from project root)
 2. **Start Claude Code** (`claude`)
 3. **Choose appropriate git branch** based on PSF vs nixos-core work
 4. **Read docs/PSF_IMPLEMENTATION.md** completely to understand the current design
