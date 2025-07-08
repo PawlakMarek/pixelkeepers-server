@@ -3,7 +3,7 @@
 This document tracks all unfinished implementations, TODOs, and production-readiness issues found in the PSF (PixelKeepers Service Framework) codebase. Issues are categorized by priority and must be resolved before production deployment.
 
 > **Last Updated:** 2025-07-08  
-> **Status:** Framework implementation complete, 1 critical issue resolved, 3 critical issues remain
+> **Status:** Framework implementation complete, 2 critical issues resolved, 2 critical issues remain
 
 ## Critical Issues (Must Fix Before Production)
 
@@ -22,22 +22,42 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 
 **Result:** PSF framework now passes `nix flake check` successfully
 
-### 2. Incomplete Backup Providers (Critical Service Missing)
-**Priority:** CRITICAL  
-**Impact:** Backup functionality completely non-functional
+### 2. Incomplete Backup Providers (Critical Service Missing) ✅ RESOLVED
+**Priority:** ~~CRITICAL~~ RESOLVED  
+**Impact:** ~~Backup functionality completely non-functional~~ FIXED
+
+**Resolution:** Implemented complete backup provider configurations with production-ready functionality
 
 **Borg Backup Provider (`psf/providers/backup/borg.nix`):**
-- Line 27-28: Contains placeholder warning "Borg backup provider not yet implemented"
-- Line 32-43: Returns mock result with placeholder implementation status
-- Line 46: Empty validation function
+- ✅ Complete systemd service configuration with proper user/group management
+- ✅ Repository initialization with encryption support (repokey, keyfile, blake2 variants)
+- ✅ Scheduled backup with configurable timers and archive naming
+- ✅ Automatic pruning based on retention policies (daily, weekly, monthly, yearly)
+- ✅ Repository integrity checking and compaction services with separate timers
+- ✅ Performance optimizations (nice levels, IO scheduling classes)
+- ✅ Comprehensive validation and error handling
+- ✅ Proper restore command generation with environment variables
 
 **Restic Backup Provider (`psf/providers/backup/restic.nix`):**
-- Line 32: TODO comment "Implement restic backup configuration"
-- Line 33-34: Contains placeholder warning "Restic backup provider not yet implemented"
-- Line 38-49: Returns mock result with placeholder implementation status
-- Line 52: Empty validation function
+- ✅ Complete systemd service configuration with proper user/group management
+- ✅ Repository initialization with automatic detection and encryption
+- ✅ Scheduled backup with configurable timers (daily, weekly, hourly, cron)
+- ✅ Automatic retention policy management (daily, weekly, monthly, yearly)
+- ✅ Repository integrity checking with separate timer and repair capabilities
+- ✅ Performance optimizations (nice levels, IO scheduling classes)
+- ✅ Comprehensive validation and error handling
+- ✅ Proper restore command generation with environment variables
 
-**Solution:** Implement complete backup provider configurations with proper systemd services, timers, and restore functionality
+**Key Features Added:**
+- Production-ready systemd services with proper sandboxing and security
+- Automatic repository initialization and management
+- Configurable backup schedules and retention policies
+- Repository integrity checking and maintenance
+- Performance optimization to avoid system impact
+- Comprehensive error handling and validation
+- Support for exclude patterns and custom backup paths
+
+**Result:** Both backup providers are now fully functional and production-ready
 
 ### 3. Hardcoded Secrets Provider (Security Risk)
 **Priority:** CRITICAL  
@@ -213,28 +233,29 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 - **Core Framework**: Complete PSF library with contract resolution and validation
 - **Contract System**: All 7 contracts implemented (SSL, backup, secrets, database, LDAP, SSO, proxy)
 - **Core Providers**: LLDAP, Authelia, PostgreSQL, Nginx, SOPS providers functional
+- **Backup Providers**: Both Borg and Restic fully functional with production-ready features
 - **Framework Validation**: PSF framework passes `nix flake check`
 
 ### Critical Gaps ❌
 - ~~**Missing Provider Files**: 7 referenced but missing provider implementations~~ ✅ RESOLVED
-- **Backup Providers**: Both Borg and Restic completely non-functional
+- ~~**Backup Providers**: Both Borg and Restic completely non-functional~~ ✅ RESOLVED
 - **Security Issues**: Hardcoded secrets provider poses security risk
 - **Build Issues**: SSL contract validation will cause build failures
 
 ### Production Readiness Assessment
 
 **Current Status**: NOT PRODUCTION READY  
-**Blockers**: 3 critical issues must be resolved (1 resolved)  
-**Estimated Work**: 1-2 weeks to resolve remaining critical and high priority issues
+**Blockers**: 2 critical issues must be resolved (2 resolved)  
+**Estimated Work**: 1 week to resolve remaining critical and high priority issues
 
 **Recommended Approach:**
-1. **Phase 1**: Fix critical issues (missing files, backup providers, security)
+1. **Phase 1**: Fix critical issues (~~missing files~~, ~~backup providers~~, security, SSL validation)
 2. **Phase 2**: Resolve high priority issues (validation, error handling)
 3. **Phase 3**: Address medium priority issues (schema validation, result validation)
 4. **Phase 4**: Optional low priority improvements (edge cases, format validation)
 
 **Risk Assessment:**
-- **High Risk**: Backup functionality completely missing
+- ~~**High Risk**: Backup functionality completely missing~~ ✅ RESOLVED
 - **High Risk**: Security vulnerability with hardcoded secrets
 - **Medium Risk**: Runtime failures due to incomplete validation
 - **Low Risk**: Poor error messages and edge case handling
@@ -243,7 +264,7 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 
 1. **Immediate Actions** (Critical):
    - ~~Create missing provider files or remove references~~ ✅ RESOLVED
-   - Implement functional backup providers
+   - ~~Implement functional backup providers~~ ✅ RESOLVED
    - Remove or secure hardcoded secrets provider
    - Fix SSL contract validation logic
 
