@@ -2,13 +2,18 @@
   description = "Ibizaman's config.";
 
   inputs = {
+    # Legacy SHB system (being phased out)
     selfhostblocks.url = "path:./shb-fork";
-
     skarabox.url = "github:ibizaman/skarabox";
     skarabox.inputs.nixpkgs.follows = "selfhostblocks/nixpkgs";
 
-    deploy-rs.url = "github:serokell/deploy-rs";
+    # Modern nixpkgs for PSF framework
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable-small";
+    nixpkgs-full.url = "github:NixOS/nixpkgs/nixos-unstable";
+    flake-utils.url = "github:numtide/flake-utils";
 
+    # Deployment and secrets
+    deploy-rs.url = "github:serokell/deploy-rs";
     sops-nix.url = "github:Mic92/sops-nix";
   };
 
@@ -18,6 +23,9 @@
     selfhostblocks,
     sops-nix,
     deploy-rs,
+    nixpkgs,
+    nixpkgs-full,
+    flake-utils,
   }: let
     system = "x86_64-linux";
     shbLib = selfhostblocks.lib.${system};
@@ -41,6 +49,17 @@
     };
 
     domain = "pixelkeepers.net";
+    
+    # PSF framework integration
+    psfPkgs = import nixpkgs { 
+      inherit system; 
+      config = { allowUnfree = true; };
+    };
+    psfPkgs-full = nixpkgs-full.legacyPackages.${system};
+    
+    # Import PSF library
+    psfLib = import ./psf/lib { inherit (psfPkgs) lib; pkgs = psfPkgs; };
+    
   in {
     nixosModules.nixos-core = {
       imports = [
@@ -106,7 +125,7 @@
       ];
     };
 
-    # Used with deploy-rs for updates.
+    # Used with deploy-rs for updates (local network).
     deploy.nodes.nixos-core = {
       hostname = "192.168.68.20";
       sshUser = "h4wkeye";
@@ -119,8 +138,89 @@
         };
       };
     };
+
+    # Used with deploy-rs for updates (remote via pixelkeepers.net:3322).
+    deploy.nodes.nixos-core-remote = {
+      hostname = "pixelkeepers.net";
+      sshUser = "h4wkeye";
+      sshOpts = ["-o" "IdentitiesOnly=yes" "-i" "nixos-core/ssh" "-p" "3322"];
+      activationTimeout = 600;
+      profiles = {
+        system = {
+          user = "root";
+          path = deployPkgs.deploy-rs.lib.activate.nixos self.nixosConfigurations.nixos-core;
+        };
+      };
+    };
     # From https://github.com/serokell/deploy-rs?tab=readme-ov-file#overall-usage
     checks = builtins.mapAttrs (_system: deployLib: deployLib.deployChecks self.deploy) deploy-rs.lib;
+    
+    # PSF Framework exports
+    lib = psfLib;
+    nixosModules.psf = psfLib.psfModule;
+    
+    # Development environment
+    devShells.${system}.default = psfPkgs.mkShell {
+      name = "pixelkeepers-dev";
+      buildInputs = with psfPkgs; [
+        # Nix development tools
+        nix
+        nixpkgs-fmt
+        nixfmt-classic
+        statix
+        
+        # Git and development tools
+        git
+        gh
+        openssh
+        
+        # Server management tools
+        deployPkgs.deploy-rs.deploy-rs
+        sops
+        
+        # Documentation tools
+        mdbook
+        
+        # Development and debugging tools
+        httpie  # Modern curl alternative
+        curl    # Classic HTTP client
+        jq      # JSON processor
+        yq      # YAML processor
+        netcat  # Network testing
+      ];
+      
+      shellHook = ''
+        echo "🏠 PixelKeepers Development Environment"
+        echo ""
+        echo "📁 Project Structure:"
+        echo "   docs/               - Project documentation"
+        echo "   psf/                - PSF framework development"
+        echo "   nixos-core/         - Production server configuration"
+        echo "   shb-fork/           - Legacy SHB (being phased out)"
+        echo ""
+        echo "📚 Essential Documentation:"
+        echo "   docs/PSF_IMPLEMENTATION.md  - PSF technical specification"
+        echo "   docs/CLAUDE.md              - Development workflow guide"
+        echo ""
+        echo "🔧 Available Commands:"
+        echo "   nix run .#deploy           - Smart deploy (local then remote)"
+        echo "   nix run .#nixos-core-ssh   - SSH to server (local/remote)"
+        echo "   nix run .#sops             - Edit secrets"
+        echo "   nix flake check            - Validate entire project"
+        echo "   cd psf && nix flake check  - Validate PSF framework only"
+        echo "   cd nixos-core && nix flake check - Validate server config only"
+        echo ""
+        echo "🤖 Claude Code available for AI-assisted development"
+        echo "🔐 Git signing configured: $(git config --get commit.gpgsign)"
+        echo ""
+      '';
+      
+      # Environment variables
+      PSF_ROOT = builtins.toString ./psf;
+      NIXOS_CORE_ROOT = builtins.toString ./nixos-core;
+      DOCS_PATH = builtins.toString ./docs;
+      PROJECT_ROOT = builtins.toString ./.;
+    };
 
     # Apps for server management
     apps.${system} = {
@@ -129,7 +229,7 @@
         program = "${shbPkgs.sops}/bin/sops";
       };
 
-      # SSH access to nixos-core
+      # SSH access to nixos-core (local network)
       nixos-core-ssh = {
         type = "app";
         program = "${shbPkgs.writeShellScript "nixos-core-ssh" ''
@@ -137,20 +237,79 @@
         ''}";
       };
 
-      # Unlock root pool after reboot
-      nixos-core-unlock = {
+      # SSH access to nixos-core (remote via pixelkeepers.net:3322)
+      nixos-core-ssh-remote = {
         type = "app";
-        program = "${shbPkgs.writeShellScript "nixos-core-unlock" ''
-          echo "Unlocking root pool on nixos-core..."
-          ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} h4wkeye@192.168.68.20 \
-            "echo '$(${shbPkgs.sops}/bin/sops --decrypt --extract '[\"nixos-core\"][\"disks\"][\"rootPassphrase\"]' ${./nixos-core/secrets.yaml})' | sudo zfs load-key root"
+        program = "${shbPkgs.writeShellScript "nixos-core-ssh-remote" ''
+          exec ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} -p 3322 h4wkeye@pixelkeepers.net "$@"
         ''}";
       };
 
-      # Deploy using deploy-rs
+      # SSH access to nixos-core boot/initrd (local 192.168.68.20:2222)
+      nixos-core-ssh-boot = {
+        type = "app";
+        program = "${shbPkgs.writeShellScript "nixos-core-ssh-boot" ''
+          exec ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} -p 2222 h4wkeye@192.168.68.20 "$@"
+        ''}";
+      };
+
+      # SSH access to nixos-core boot/initrd (remote pixelkeepers.net:4422)
+      nixos-core-ssh-boot-remote = {
+        type = "app";
+        program = "${shbPkgs.writeShellScript "nixos-core-ssh-boot-remote" ''
+          exec ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} -p 4422 h4wkeye@pixelkeepers.net "$@"
+        ''}";
+      };
+
+      # Unlock root pool during boot via initrd SSH (tries local, then remote)
+      nixos-core-unlock = {
+        type = "app";
+        program = "${shbPkgs.writeShellScript "nixos-core-unlock" ''
+          echo "Unlocking root pool via initrd boot SSH..."
+          PASSPHRASE="$(${shbPkgs.sops}/bin/sops --decrypt --extract '[\"nixos-core\"][\"disks\"][\"rootPassphrase\"]' ${./nixos-core/secrets.yaml})"
+          
+          # Try local boot SSH first (192.168.68.20:2222)
+          if ${shbPkgs.openssh}/bin/ssh -o ConnectTimeout=10 -o IdentitiesOnly=yes -i ${./nixos-core/ssh} -p 2222 h4wkeye@192.168.68.20 true 2>/dev/null; then
+            echo "Using local boot SSH (192.168.68.20:2222)..."
+            echo "$PASSPHRASE" | ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} -p 2222 h4wkeye@192.168.68.20 \
+              "systemd-tty-ask-password-agent"
+          else
+            echo "Local boot SSH not available, trying remote (pixelkeepers.net:4422)..."
+            echo "$PASSPHRASE" | ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} -p 4422 h4wkeye@pixelkeepers.net \
+              "systemd-tty-ask-password-agent"
+          fi
+        ''}";
+      };
+
+      # Deploy using deploy-rs (local network)
       deploy-rs = {
         type = "app";
         program = "${deployPkgs.deploy-rs.deploy-rs}/bin/deploy";
+      };
+
+      # Deploy using deploy-rs (remote via pixelkeepers.net:3322)
+      deploy-rs-remote = {
+        type = "app";
+        program = "${shbPkgs.writeShellScript "deploy-rs-remote" ''
+          exec ${deployPkgs.deploy-rs.deploy-rs}/bin/deploy .#nixos-core-remote "$@"
+        ''}";
+      };
+
+      # Smart deploy - tries local, falls back to remote
+      deploy = {
+        type = "app";
+        program = "${shbPkgs.writeShellScript "deploy-smart" ''
+          echo "🚀 Smart deployment - trying local network first..."
+          
+          # Test local network connectivity
+          if ${shbPkgs.openssh}/bin/ssh -o ConnectTimeout=5 -o IdentitiesOnly=yes -i ${./nixos-core/ssh} h4wkeye@192.168.68.20 true 2>/dev/null; then
+            echo "✅ Local network available, deploying locally..."
+            exec ${deployPkgs.deploy-rs.deploy-rs}/bin/deploy .#nixos-core "$@"
+          else
+            echo "🌐 Local network not available, deploying remotely..."
+            exec ${deployPkgs.deploy-rs.deploy-rs}/bin/deploy .#nixos-core-remote "$@"
+          fi
+        ''}";
       };
 
       # Get 2FA codes from filesystem notifications
@@ -164,7 +323,12 @@
           echo "🔍 Fetching 2FA codes from Authelia filesystem notifications..."
           echo ""
 
-          ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} h4wkeye@192.168.68.20 "
+          # Try local network first, fall back to remote
+          if ${shbPkgs.openssh}/bin/ssh -o ConnectTimeout=5 -o IdentitiesOnly=yes -i ${./nixos-core/ssh} h4wkeye@192.168.68.20 true 2>/dev/null; then
+            ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} h4wkeye@192.168.68.20 "
+          else
+            echo "Local network not available, trying remote access..."
+            ${shbPkgs.openssh}/bin/ssh -o IdentitiesOnly=yes -i ${./nixos-core/ssh} -p 3322 h4wkeye@pixelkeepers.net "
             set -e
 
             # Find the systemd private temp directory for Authelia (not Redis)
