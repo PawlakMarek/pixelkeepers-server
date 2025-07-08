@@ -1,0 +1,76 @@
+{
+  description = "Flake For Skarabox.";
+
+  inputs = {
+    nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
+    skarabox.url = "github:ibizaman/skarabox";
+    selfhostblocks.url = "github:ibizaman/selfhostblocks";
+
+    nixos-generators.url = "github:nix-community/nixos-generators";
+    nixos-generators.inputs.nixpkgs.follows = "nixpkgs";
+
+    nixos-anywhere.url = "github:nix-community/nixos-anywhere";
+    nixos-anywhere.inputs.nixpkgs.follows = "nixpkgs";
+
+    nixos-facter-modules.url = "github:numtide/nixos-facter-modules";
+    flake-parts.url = "github:hercules-ci/flake-parts";
+    deploy-rs.url = "github:serokell/deploy-rs";
+    colmena.url = "github:zhaofengli/colmena";
+    sops-nix.url = "github:Mic92/sops-nix";
+  };
+
+  outputs = inputs@{ self, skarabox, sops-nix, nixpkgs, flake-parts, ... }: flake-parts.lib.mkFlake { inherit inputs; } {
+    systems = [
+      "x86_64-linux"
+      "aarch64-linux"
+    ];
+
+    imports = [
+      skarabox.flakeModules.default
+    ];
+
+    skarabox.hosts = {
+      nixos-core = {
+        system = ./nixos-core/system;
+        hostKeyPub = ./nixos-core/host_key.pub;
+        ip = ./nixos-core/ip;
+        sshPublicKey = ./nixos-core/ssh.pub;
+        knownHosts = ./nixos-core/known_hosts;
+        
+        # Add custom encryption keys for additional ZFS pools
+        extraSecretsPassphrasesPath = {
+          zdata_passphrase = "['nixos-core']['disks']['zdataPassphrase']";
+          zprivate_passphrase = "['nixos-core']['disks']['zprivatePassphrase']";
+        };
+
+        modules = [
+          sops-nix.nixosModules.default
+          inputs.selfhostblocks.nixosModules.x86_64-linux.default
+          self.nixosModules.nixos-core
+        ];
+        extraBeaconModules = [
+          {
+            # Add more utilities
+            #
+            # environment.systemPackages = [
+            #   pkgs.tmux
+            #   pkgs.htop
+            #   pkgs.glances
+            #   pkgs.iotop
+            # ];
+          }
+        ];
+      };
+    };
+
+    flake = {
+      nixosModules = {
+        nixos-core = {
+          imports = [
+            ./nixos-core/configuration.nix
+          ];
+        };
+      };
+    };
+  };
+}

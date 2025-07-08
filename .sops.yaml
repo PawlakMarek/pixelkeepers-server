@@ -1,0 +1,9 @@
+keys:
+- &main age1mpmxyey2t0xelfgexhhrzv5cgph5jwqexkxt0ly2a73e4y9hp3fspgjuyq
+- &nixos-core age1qgaf92684r97fhwtcdsy2z205em9pe577gasw9f8jlyzmjvd4yxs78q8tq
+creation_rules:
+- path_regex: nixos-core/secrets.yaml
+  key_groups:
+  - age:
+    - *main
+    - *nixos-core

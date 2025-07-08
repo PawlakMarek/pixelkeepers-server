@@ -1,0 +1,51 @@
+# Nix build results
+result
+result-*
+
+# Nix development shells
+.direnv/
+.envrc
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Secrets and sensitive files (but allow specific public keys)
+secrets.yaml
+*.key
+*.pem
+*.p12
+id_rsa*
+id_ed25519*
+
+# SSH keys - exclude private keys but allow public keys and specific server keys
+nixos-core/ssh
+!nixos-core/ssh.pub
+
+# Temporary files
+*.tmp
+*.log
+.cache/
+
+# PSF development
+psf/result*
+psf/.direnv/
+
+# nixos-core specific
+nixos-core/result*
+nixos-core/.direnv/
+
+# Documentation build artifacts
+docs/*.html
+docs/*.pdf
+
+# Embedded git repositories
+shb-fork/
+skarabox-source/
