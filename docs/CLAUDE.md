@@ -79,6 +79,14 @@ This is a **monorepo** containing two interconnected projects:
 - **PSF** (`psf/`) - Framework development
 - **nixos-core** (`nixos-core/`) - Production server configuration
 
+**GitHub Repository:** https://github.com/PawlakMarek/pixelkeepers-server (private)
+**SSH Clone:** `git clone git@github.com:PawlakMarek/pixelkeepers-server.git`
+
+**Repository Configuration:**
+- SSH commit signing enabled and required
+- Protected main branch (production-ready code only)
+- All commits must be signed with SSH key
+
 ### Branch Strategy
 
 ```
@@ -104,7 +112,7 @@ git checkout -b psf/feature-name
 cd psf
 # ... make changes ...
 
-# Commit and push
+# Commit and push (commits are automatically signed)
 git add psf/
 git commit -m "psf: implement feature description
 
@@ -128,7 +136,7 @@ cd nixos-core
 # Test before committing
 nix flake check
 
-# Commit and push
+# Commit and push (commits are automatically signed)
 git add nixos-core/
 git commit -m "nixos-core: configuration change description
 
@@ -149,6 +157,7 @@ git commit -m "docs: update documentation
 🤖 Generated with [Claude Code](https://claude.ai/code)
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
+git push origin develop  # or current feature branch
 ```
 
 ### Commit Message Conventions
@@ -189,6 +198,31 @@ git diff --cached --name-only | grep -E "(secrets|\.key|\.pem)"
 - `nixos-core/ssh.pub` - SSH public key
 - Configuration files without secrets
 
+### Commit Signing Requirements
+
+**All commits MUST be signed with SSH key:**
+```bash
+# Repository is configured for SSH signing
+git config commit.gpgsign true
+git config gpg.format ssh
+git config user.signingkey ~/.ssh/id_ed25519.pub
+
+# Commits are automatically signed
+git commit -m "message"
+
+# To re-sign an existing commit
+git commit --amend --no-edit -S
+```
+
+**Verify commit signatures:**
+```bash
+# Check if commits are signed
+git log --show-signature --oneline -5
+
+# Verify specific commit
+git verify-commit <commit-hash>
+```
+
 ### Integration Workflow
 
 #### Merging PSF Changes
@@ -211,6 +245,45 @@ git checkout main
 git merge nixos-core/feature-name
 git push origin main
 ```
+
+## Server Management
+
+### SSH Access (from project root)
+```bash
+# Regular SSH access (after boot)
+nix run .#nixos-core-ssh          # Local network (192.168.68.20:22)
+nix run .#nixos-core-ssh-remote   # Remote access (pixelkeepers.net:3322)
+
+# Boot/InitRD SSH access (for unlocking during boot)
+nix run .#nixos-core-ssh-boot     # Local boot SSH (192.168.68.20:2222)
+nix run .#nixos-core-ssh-boot-remote # Remote boot SSH (pixelkeepers.net:4422)
+
+# Automated root pool unlock during boot
+nix run .#nixos-core-unlock       # Tries local 2222, then remote 4422
+```
+
+### Deployment (from project root)
+```bash
+# Smart deployment (automatically chooses local or remote)
+nix run .#deploy                  # Recommended - tries local, then remote
+
+# Manual deployment options
+nix run .#deploy-rs              # Local deployment only (192.168.68.20)
+nix run .#deploy-rs-remote       # Remote deployment only (pixelkeepers.net:3322)
+
+# Test configuration before deploying
+cd nixos-core && nix flake check
+```
+
+### Network Access Patterns
+**Local Network (when at home):**
+- SSH: 192.168.68.20:22 (regular), 192.168.68.20:2222 (boot)
+- Deploy: Direct to local IP
+
+**Remote Access (when away from home):**
+- SSH: pixelkeepers.net:3322 (regular), pixelkeepers.net:4422 (boot)
+- Deploy: Via router port forwarding
+- Router forwards 3322→192.168.68.20:22, 4422→192.168.68.20:2222
 
 ## Development Workflow
 
