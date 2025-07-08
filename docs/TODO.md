@@ -3,24 +3,24 @@
 This document tracks all unfinished implementations, TODOs, and production-readiness issues found in the PSF (PixelKeepers Service Framework) codebase. Issues are categorized by priority and must be resolved before production deployment.
 
 > **Last Updated:** 2025-07-08  
-> **Status:** Framework implementation complete, but critical production issues remain
+> **Status:** Framework implementation complete, 1 critical issue resolved, 3 critical issues remain
 
 ## Critical Issues (Must Fix Before Production)
 
-### 1. Missing Provider Files (Build Failures)
-**Priority:** CRITICAL  
-**Impact:** Build failures when framework attempts to import missing files
+### 1. Missing Provider Files (Build Failures) ✅ RESOLVED
+**Priority:** ~~CRITICAL~~ RESOLVED  
+**Impact:** ~~Build failures when framework attempts to import missing files~~ FIXED
 
-**Files Referenced but Missing:**
-- `psf/providers/ldap/kanidm.nix` (referenced in `providers/default.nix:41`)
-- `psf/providers/ldap/openldap.nix` (referenced in `providers/default.nix:42`)
-- `psf/providers/sso/kanidm.nix` (referenced in `providers/default.nix:48`)
-- `psf/providers/sso/oidc.nix` (referenced in `providers/default.nix:49`)
-- `psf/providers/proxy/caddy.nix` (referenced in `providers/default.nix:55`)
-- `psf/providers/proxy/traefik.nix` (referenced in `providers/default.nix:56`)
-- `psf/providers/proxy/apache.nix` (referenced in `providers/default.nix:57`)
+**Resolution:** Removed references to missing provider files from `providers/default.nix`
+- Removed `psf/providers/ldap/kanidm.nix` reference
+- Removed `psf/providers/ldap/openldap.nix` reference  
+- Removed `psf/providers/sso/kanidm.nix` reference
+- Removed `psf/providers/sso/oidc.nix` reference
+- Removed `psf/providers/proxy/caddy.nix` reference
+- Removed `psf/providers/proxy/traefik.nix` reference
+- Removed `psf/providers/proxy/apache.nix` reference
 
-**Solution:** Create missing provider files or remove references from `providers/default.nix`
+**Result:** PSF framework now passes `nix flake check` successfully
 
 ### 2. Incomplete Backup Providers (Critical Service Missing)
 **Priority:** CRITICAL  
@@ -188,6 +188,25 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 
 **Solution:** Add comprehensive edge case validation throughout the framework
 
+### 16. Missing Alternative Provider Implementations
+**Priority:** LOW  
+**Impact:** Reduced provider choice and flexibility
+
+**Missing LDAP Providers:**
+- `psf/providers/ldap/kanidm.nix` - Kanidm LDAP provider (modern, OAuth2/OIDC built-in)
+- `psf/providers/ldap/openldap.nix` - OpenLDAP provider (traditional, maximum compatibility)
+
+**Missing SSO Providers:**
+- `psf/providers/sso/kanidm.nix` - Kanidm SSO provider (built-in OAuth2/OIDC)
+- `psf/providers/sso/oidc.nix` - Generic OIDC SSO provider
+
+**Missing Proxy Providers:**
+- `psf/providers/proxy/caddy.nix` - Caddy reverse proxy (automatic HTTPS)
+- `psf/providers/proxy/traefik.nix` - Traefik reverse proxy (Docker-friendly)
+- `psf/providers/proxy/apache.nix` - Apache reverse proxy (traditional)
+
+**Solution:** Implement additional provider options following existing provider patterns
+
 ## Implementation Status Summary
 
 ### Completed Components ✅
@@ -197,7 +216,7 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 - **Framework Validation**: PSF framework passes `nix flake check`
 
 ### Critical Gaps ❌
-- **Missing Provider Files**: 7 referenced but missing provider implementations
+- ~~**Missing Provider Files**: 7 referenced but missing provider implementations~~ ✅ RESOLVED
 - **Backup Providers**: Both Borg and Restic completely non-functional
 - **Security Issues**: Hardcoded secrets provider poses security risk
 - **Build Issues**: SSL contract validation will cause build failures
@@ -205,8 +224,8 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 ### Production Readiness Assessment
 
 **Current Status**: NOT PRODUCTION READY  
-**Blockers**: 4 critical issues must be resolved  
-**Estimated Work**: 2-3 weeks to resolve all critical and high priority issues
+**Blockers**: 3 critical issues must be resolved (1 resolved)  
+**Estimated Work**: 1-2 weeks to resolve remaining critical and high priority issues
 
 **Recommended Approach:**
 1. **Phase 1**: Fix critical issues (missing files, backup providers, security)
@@ -223,7 +242,7 @@ This document tracks all unfinished implementations, TODOs, and production-readi
 ## Next Steps
 
 1. **Immediate Actions** (Critical):
-   - Create missing provider files or remove references
+   - ~~Create missing provider files or remove references~~ ✅ RESOLVED
    - Implement functional backup providers
    - Remove or secure hardcoded secrets provider
    - Fix SSL contract validation logic

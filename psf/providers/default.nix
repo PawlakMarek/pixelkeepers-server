@@ -38,23 +38,19 @@ rec {
   # LDAP providers
   ldap = {
     lldap = import ./ldap/lldap.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
-    kanidm = import ./ldap/kanidm.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
-    openldap = import ./ldap/openldap.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
+    # TODO: Add kanidm and openldap providers when implemented
   };
   
   # SSO providers
   sso = {
     authelia = import ./sso/authelia.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
-    kanidm = import ./sso/kanidm.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
-    oidc = import ./sso/oidc.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
+    # TODO: Add kanidm and oidc providers when implemented
   };
   
   # Proxy providers
   proxy = {
     nginx = import ./proxy/nginx.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
-    caddy = import ./proxy/caddy.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
-    traefik = import ./proxy/traefik.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
-    apache = import ./proxy/apache.nix { inherit (pkgs) lib; inherit pkgs registerProvider; };
+    # TODO: Add caddy, traefik, and apache providers when implemented
   };
   
   # All providers flattened for easy access
