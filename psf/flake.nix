@@ -10,7 +10,10 @@
   outputs = { self, nixpkgs, nixpkgs-full, flake-utils }:
     flake-utils.lib.eachDefaultSystem (system:
       let
-        pkgs = nixpkgs.legacyPackages.${system};
+        pkgs = import nixpkgs { 
+          inherit system; 
+          config = { allowUnfree = true; };
+        };
         pkgs-full = nixpkgs-full.legacyPackages.${system};  # Fallback for missing packages
         
         # Import PSF library modules
