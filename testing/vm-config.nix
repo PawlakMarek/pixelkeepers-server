@@ -176,60 +176,40 @@ in
     enable = true;
     domain = "test.local";
     
-    # Configure test providers using existing PSF providers
+    # Configure test providers
     providers = {
-      # SSL provider (self-signed for testing)
-      selfsigned = {
-        domain = "test.local";
-      };
-      
       # Database provider (PostgreSQL)
       postgresql = {
         version = "17";
-        settings = {
-          max_connections = "50";
-          shared_buffers = "256MB";
-        };
+        max_connections = 50;
+        shared_buffers = "256MB";
+        listen_addresses = [ "127.0.0.1" ];
       };
       
       # Secrets provider (hardcoded for testing)
       hardcoded = {
         secrets = {
-          test-secret = "test-value";
-          db-password = "testdbpass123";
+          testapp-db-password = "testdbpass123";
         };
-      };
-      
-      # Backup provider (borg for testing)
-      borg = {
-        repository = "/var/lib/borg-backups";
-        passphrase = "test-passphrase-123";
-      };
-      
-      # Proxy provider (nginx)
-      nginx = {
-        enable = true;
-      };
-      
-      # LDAP provider for authentication testing
-      lldap = {
-        domain = "test.local";
-        adminPassword = "testadmin123";
-      };
-      
-      # SSO provider for testing
-      authelia = {
-        domain = "test.local";
-        jwtSecret = "test-jwt-secret-123";
       };
     };
     
-    # Test services - these need to be properly defined PSF services
+    # Enable PSF test services
     services = {
-      # These would be actual PSF services defined with defineService
-      # For now, let's just enable the framework without specific services
+      test-app = {
+        enable = true;
+        port = 3000;
+        user = "test-app";
+        group = "test-app";
+      };
     };
   };
+  
+  # Create secrets directory and files for PSF testing
+  systemd.tmpfiles.rules = [
+    "d /run/secrets 0755 root root -"
+    "f /run/secrets/testapp-db-password 0400 test-app test-app - testdbpass123"
+  ];
 
   # Development tools
   programs = {
