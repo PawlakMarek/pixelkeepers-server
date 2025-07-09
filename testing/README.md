@@ -48,10 +48,12 @@ The testing environment consists of:
 
 ### Accessing the VM
 
-- **SSH Access:** `ssh-vm` or `ssh -p 2222 root@localhost`
+- **SSH Access:** `ssh-vm` or `ssh -p 2222 -i ../nixos-core/ssh root@localhost`
 - **HTTP:** http://localhost:8080
 - **HTTPS:** https://localhost:8443 (self-signed certificate)
 - **PostgreSQL:** localhost:5432
+
+**Note:** All SSH connections use the production SSH key (`../nixos-core/ssh`) for consistency.
 
 ## VM Configuration Details
 
@@ -188,6 +190,8 @@ curl -s http://localhost:9091/api/health
 1. **Check VM logs:**
    ```bash
    ssh-vm
+   # or manually:
+   ssh -p 2222 -i ../nixos-core/ssh root@localhost
    journalctl -f  # Follow system logs
    journalctl -u <service-name>  # Specific service logs
    ```

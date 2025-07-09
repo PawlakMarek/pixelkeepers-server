@@ -33,7 +33,7 @@
     deploy.nodes.psf-test-vm = {
       hostname = "localhost";
       sshUser = "root";
-      sshOpts = [ "-p" "2222" ];
+      sshOpts = [ "-p" "2222" "-i" "../nixos-core/ssh" ];
       
       profiles.system = {
         user = "root";
@@ -97,7 +97,7 @@
         
         function ssh-vm() {
           echo "Connecting to PSF test VM..."
-          ssh -p 2222 root@localhost
+          ssh -p 2222 -i ../nixos-core/ssh root@localhost
         }
         
         function test-psf() {
@@ -149,7 +149,7 @@
       ssh-vm = {
         type = "app";
         program = toString (pkgs.writeShellScript "ssh-vm" ''
-          exec ${pkgs.openssh}/bin/ssh -p 2222 root@localhost "$@"
+          exec ${pkgs.openssh}/bin/ssh -p 2222 -i ../nixos-core/ssh root@localhost "$@"
         '');
       };
       
@@ -198,7 +198,7 @@
           echo ""
           echo "3. Testing PSF services via SSH..."
           if ${pkgs.netcat}/bin/nc -z localhost 2222 2>/dev/null; then
-            ${pkgs.openssh}/bin/ssh -p 2222 -o ConnectTimeout=5 -o BatchMode=yes root@localhost '
+            ${pkgs.openssh}/bin/ssh -p 2222 -i ../nixos-core/ssh -o ConnectTimeout=5 -o BatchMode=yes root@localhost '
               echo "=== PSF Service Status ==="
               systemctl is-active postgresql || echo "PostgreSQL: inactive"
               systemctl is-active nginx || echo "Nginx: inactive"
