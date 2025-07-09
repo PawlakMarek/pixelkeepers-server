@@ -53,10 +53,10 @@ in
   
   # Boot configuration
   boot = {
-    # Use systemd-boot for VMs
+    # Disable bootloader for VMs - not needed for testing
     loader = {
-      systemd-boot.enable = true;
-      efi.canTouchEfiVariables = true;
+      grub.enable = false;
+      timeout = 0;
     };
     
     # Enable necessary kernel modules
@@ -68,8 +68,9 @@ in
     hostName = "psf-test-vm";
     domain = "test.local";
     
-    # Use DHCP for simplicity in VM
-    useDHCP = true;
+    # Use networkd for consistent networking
+    useNetworkd = true;
+    useDHCP = false;
     
     # Firewall configuration for testing
     firewall = {
