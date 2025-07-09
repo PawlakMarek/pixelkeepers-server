@@ -37,7 +37,6 @@ let
     ) contractNeeds;
 
 in {
-  
   # Main PSF API - this is what services use
   defineService = name: serviceFn: { config, lib, pkgs, ... }:
   let
@@ -102,7 +101,7 @@ in {
   # Utility functions
   utils = import ./utils.nix { inherit lib pkgs; };
   
-  # PSF Module for NixOS
+  # PSF Module for NixOS - simplified for now
   psfModule = { config, lib, pkgs, ... }:
   let
     cfg = config.psf;
@@ -191,6 +190,9 @@ in {
       warnings = lib.optionals (!cfg.validation.build_time) [
         "PSF build-time validation is disabled - this may lead to runtime errors"
       ];
+      
+      # TODO: Implement service loading mechanism
+      # For now, PSF validates configuration but doesn't instantiate services
     };
   };
 }
